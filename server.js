@@ -1,3 +1,5 @@
+const connectDB = require("./config/db");
+
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -11,10 +13,10 @@ const Task = require("./models/Task");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-mongoose.connect(process.env.MONGO_URL)
+connectDB();
 //mongoose.connect("mongodb+srv://taskuser:taskpass123@cluster0.sba32k7.mongodb.net/?appName=Cluster0")
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => console.log(err));
+//  .then(() => console.log("MongoDB connected"))
+//  .catch(err => console.log(err));
 
 app.use(cors());
 app.use(express.json());
