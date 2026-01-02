@@ -1,34 +1,51 @@
+require("dotenv").config();
+
+const app = require("./app");
 const connectDB = require("./config/db");
 
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-
-const User = require("./models/User");
-const Task = require("./models/Task");
-
-
-const app = express();
 const PORT = process.env.PORT || 3000;
 
 connectDB();
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+
+//const connectDB = require("./config/db");
+
+//const express = require("express");
+//const cors = require("cors");
+//const mongoose = require("mongoose");
+//const bcrypt = require("bcryptjs");
+//const jwt = require("jsonwebtoken");
+
+//const User = require("./models/User");
+//const Task = require("./models/Task");
+
+
+//const app = express();
+//const PORT = process.env.PORT || 3000;
+
+//connectDB();
 //mongoose.connect("mongodb+srv://taskuser:taskpass123@cluster0.sba32k7.mongodb.net/?appName=Cluster0")
 //  .then(() => console.log("MongoDB connected"))
 //  .catch(err => console.log(err));
 
-app.use(cors());
-app.use(express.json());
+//app.use(cors());
+//app.use(express.json());
 
 
 
-let tasks = [];
+//let tasks = [];
 
+/*
 app.get("/", (req, res) => {
   res.send("Server is running");
 });
+*/
 
+/*
 function auth(req, res, next) {
   const token = req.headers.authorization;
 
@@ -45,8 +62,9 @@ function auth(req, res, next) {
     return res.status(401).json({ error: "Invalid token" });
   }
 }
+*/
 
-
+/*
 app.get("/tasks", auth, async (req, res) => {
   const tasks = await Task.find({ userId: req.userId });
   res.json(tasks);
@@ -61,8 +79,9 @@ app.post("/tasks", auth, async (req, res) => {
   await newTask.save();
   res.json({ success: true });
 });
+*/
 
-
+/*
 app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
 
@@ -101,7 +120,7 @@ app.post("/login", async (req, res) => {
 
   res.json({ token });
 });
-
+*/
 
 app.get("/debug/tasks", async (req, res) => {
   const tasks = await Task.find();
@@ -115,6 +134,6 @@ app.delete("/debug/tasks", async (req, res) => {
 
 
 
-app.listen(PORT, () => {
-  console.log("Server started on port " + PORT);
-});
+//app.listen(PORT, () => {
+//  console.log("Server started on port " + PORT);
+//});
