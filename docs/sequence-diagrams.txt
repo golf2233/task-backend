@@ -149,3 +149,398 @@ MongoDB
 User Browser
 
 ---------------------------------------------------
+
+
+Explanation of sequence flows:
+---
+
+# 🧠 Big Picture: Who Talks to Whom?
+
+Browser (React)
+   ↓ HTTP request
+Routes (URL mapping)
+   ↓
+Middleware (auth)
+   ↓
+Controller (business logic)
+   ↓
+Model (MongoDB)
+   ↑
+Response back to browser
+
+
+This is the core loop of your backend.
+
+---
+
+# 🧱 Your Clean Backend Layers (Quick Map)
+
+| Layer       | Folder         | Responsibility   |
+| ----------- | -------------- | ---------------- |
+| Bootstrap   | `server.js`    | Start server     |
+| App setup   | `app.js`       | Express config   |
+| Routing     | `routes/`      | URL → controller |
+| Middleware  | `middleware/`  | Security, checks |
+| Controllers | `controllers/` | Business logic   |
+| Models      | `models/`      | DB structure     |
+| Config      | `config/`      | DB connection    |
+
+Keep this table in your head — it never changes.
+
+---
+
+# 🔁 SEQUENCE 1: User Signup Flow
+
+### 🎯 Goal
+
+Create a new user account.
+---
+
+## 🟦 Step-by-Step Flow
+
+### 1️⃣ Frontend (React)
+
+```
+fetch("/signup", { email, password })
+```
+
+👉 “Please create a new user”
+---
+
+### 2️⃣ `server.js`
+
+```
+app.listen(...)
+```
+
+* Server is already running
+* Request enters Express
+
+(No logic here)
+
+---
+
+### 3️⃣ `app.js`
+
+```
+app.use(authRoutes)
+```
+
+* Express receives `/signup`
+* Passes it to auth routes
+
+---
+
+### 4️⃣ `routes/auth.routes.js`
+
+```
+router.post("/signup", signup);
+```
+
+👉 “POST /signup should call `signup()`”
+
+No logic here — just mapping.
+
+---
+
+### 5️⃣ `controllers/auth.controller.js`
+
+```js
+exports.signup = async (req, res) => {
+  const hashedPassword = await bcrypt.hash(password);
+  await user.save();
+}
+```
+
+This is where **real work happens**:
+
+* Hash password
+* Create user
+* Save to DB
+
+---
+
+### 6️⃣ `models/User.js`
+
+```js
+new User({ email, password })
+```
+
+* Mongoose schema enforces structure
+* MongoDB writes data
+
+---
+
+### 7️⃣ Response Back
+
+```json
+{ "success": true }
+```
+
+Frontend shows:
+
+> “Signup successful”
+
+---
+
+# 🔁 SEQUENCE 2: Login Flow (JWT Creation)
+
+### 🎯 Goal
+
+Authenticate user and issue a token.
+
+---
+
+## 🟦 Step-by-Step Flow
+
+### 1️⃣ Frontend
+
+```js
+fetch("/login", { email, password })
+```
+
+---
+
+### 2️⃣ `routes/auth.routes.js`
+
+```js
+router.post("/login", login);
+```
+
+---
+
+### 3️⃣ `controllers/auth.controller.js`
+
+```js
+const user = await User.findOne({ email });
+bcrypt.compare(password);
+jwt.sign({ userId });
+```
+
+Controller does:
+
+* Find user
+* Verify password
+* Create JWT token
+
+---
+
+### 4️⃣ Token Returned
+
+```json
+{ "token": "eyJhbGci..." }
+```
+
+Frontend:
+
+* Saves token in `localStorage`
+* Switches UI to dashboard
+
+---
+
+## 🧠 Important Insight
+
+> **Backend never remembers sessions**
+>
+> Token = self-contained identity
+
+This is why your backend is **stateless**.
+
+---
+
+# 🔁 SEQUENCE 3: Fetch Tasks (Protected Route)
+
+### 🎯 Goal
+
+Return only *this user’s* tasks.
+
+---
+
+## 🟦 Step-by-Step Flow
+
+### 1️⃣ Frontend
+
+```js
+fetch("/tasks", {
+  headers: { Authorization: token }
+})
+```
+
+---
+
+### 2️⃣ `routes/task.routes.js`
+
+```js
+router.get("/tasks", auth, getTasks);
+```
+
+👉 **Important order**:
+
+1. `auth`
+2. `getTasks`
+
+---
+
+### 3️⃣ `middleware/auth.middleware.js`
+
+```js
+jwt.verify(token)
+req.userId = decoded.userId
+next()
+```
+
+This middleware:
+
+* Verifies token
+* Extracts user ID
+* Attaches it to request
+
+🚨 If token is invalid → request stops here.
+
+---
+
+### 4️⃣ `controllers/task.controller.js`
+
+```js
+Task.find({ userId: req.userId })
+```
+
+Controller:
+
+* Uses **identity from middleware**
+* Queries only that user’s data
+
+---
+
+### 5️⃣ `models/Task.js`
+
+MongoDB returns:
+
+```json
+[
+  { "task": "Task 1", "userId": "abc" }
+]
+```
+
+---
+
+### 6️⃣ Response Back
+
+Frontend updates UI.
+
+---
+
+# 🔁 SEQUENCE 4: Add Task (Protected Write)
+
+### 🎯 Goal
+
+Create a task owned by the logged-in user.
+
+---
+
+## 🟦 Step-by-Step Flow
+
+### 1️⃣ Frontend
+
+```js
+POST /tasks
+Authorization: token
+Body: { task }
+```
+
+---
+
+### 2️⃣ Route → Middleware → Controller
+
+```
+/tasks
+ → auth middleware
+ → addTask controller
+```
+
+---
+
+### 3️⃣ `middleware/auth.middleware.js`
+
+Sets:
+
+```js
+req.userId = decoded.userId
+```
+
+---
+
+### 4️⃣ `controllers/task.controller.js`
+
+```js
+new Task({
+  task: req.body.task,
+  userId: req.userId
+})
+```
+
+💡 **Frontend never sends userId**
+Backend decides ownership.
+
+---
+
+### 5️⃣ DB Save → Response
+
+```json
+{ "success": true }
+```
+
+Frontend re-fetches tasks.
+
+---
+
+# 🔐 Why This Architecture Is Correct
+
+### ❌ Bad design
+
+* Controllers reading token
+* Routes querying DB
+* UI sending userId
+
+### ✅ Your design
+
+* Middleware handles auth
+* Controllers handle logic
+* Models handle DB
+* Routes handle URLs
+
+Each layer does **one job**.
+
+---
+
+# 🧠 The Most Important Mental Model
+
+> **Request = packet traveling through layers**
+
+```
+Request
+ → Route (where?)
+ → Middleware (allowed?)
+ → Controller (what to do?)
+ → Model (store/read)
+ → Response
+```
+
+This model applies to:
+
+* Payments
+* Webhooks
+* Admin APIs
+* Anything you’ll build next
+
+---
+
+# 🏁 Summary (Remember Only 5 Things)
+
+1️⃣ `server.js` starts the engine
+2️⃣ `app.js` wires middleware & routes
+3️⃣ Routes map URLs → controllers
+4️⃣ Middleware protects requests
+5️⃣ Controllers never care about HTTP details
+
+---
