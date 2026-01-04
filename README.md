@@ -178,9 +178,9 @@ Flow:
 The backend relies on environment variables for security and flexibility.
 
 Required variables:
-MONGO_URL=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
-PORT=3000 (optional, provided by hosting platform)
+* MONGO_URL=your_mongodb_connection_string
+* JWT_SECRET=your_secret_key
+* PORT=3000 (optional, provided by hosting platform)
 
 Never commit `.env` files to GitHub.
 
@@ -188,6 +188,7 @@ Never commit `.env` files to GitHub.
 
 ## ▶️ Running Locally
 npm install
+
 npm start
 
 Backend will be available at: http://localhost:3000
