@@ -1,0 +1,73 @@
+
+Core sequence of the backend:
+-----------
+
+Browser (React)
+   ↓ HTTP request
+Routes (URL mapping)
+   ↓
+Middleware (auth)
+   ↓
+Controller (business logic)
+   ↓
+Model (MongoDB)
+   ↑
+Response back to browser
+
+-----------------------------------------------------
+
+Core Concept:
+-----------
+
+Remember only one thing:
+> Routes decide WHERE
+> Middleware decides IF
+> Controllers decide WHAT
+> Models decide HOW data looks
+
+This mental model will scale to:
+- Payments
+- Webhooks
+- Admin panels
+- Enterprise systems
+
+-----------------------------------------------------
+
+Folder structure description:
+-----------
+
+| Layer       | Folder         | Responsibility   |
+| ----------- | -------------- | ---------------- |
+| Bootstrap   | `server.js`    | Start server     |
+| App setup   | `app.js`       | Express config   |
+| Routing     | `routes/`      | URL → controller |
+| Middleware  | `middleware/`  | Security, checks |
+| Controllers | `controllers/` | Business logic   |
+| Models      | `models/`      | DB structure     |
+| Config      | `config/`      | DB connection    |
+
+-----------------------------------------------------
+
+Repo files/folders structure:
+-----------
+
+task-backend/
+├── server.js          ← start server only
+├── app.js             ← express app setup
+├── routes/
+│   ├── auth.routes.js
+│   └── task.routes.js
+├── controllers/
+│   ├── auth.controller.js
+│   └── task.controller.js
+├── middleware/
+│   └── auth.middleware.js
+├── models/
+│   ├── User.js
+│   └── Task.js
+├── config/
+│   └── db.js
+└── .env
+
+
+

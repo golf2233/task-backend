@@ -1,7 +1,14 @@
+// Authentication controller
+// Responsibility:
+// - Business logic for signup and login
+// - Password hashing
+// - JWT creation
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+// Signup: create new user with hashed password
 exports.signup = async (req, res) => {
   const { email, password } = req.body;
 
@@ -16,6 +23,7 @@ exports.signup = async (req, res) => {
   res.json({ success: true });
 };
 
+// Login: verify credentials and issue JWT
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -37,3 +45,4 @@ exports.login = async (req, res) => {
 
   res.json({ token });
 };
+

@@ -1,0 +1,151 @@
+1. SIGNUP API
+
+Key idea - Signup is write-only:
+> No auth middleware
+> No JWT yet
+> Just data creation
+
+User Browser
+    |
+    |  POST /signup  { email, password }
+    |
+    v
+Express App (app.js)
+    |
+    |  route match
+    v
+Auth Routes (routes/auth.routes.js)
+    |
+    |  signup()
+    v
+Auth Controller (controllers/auth.controller.js)
+    |
+    |  bcrypt.hash(password)
+    |  new User({...})
+    |
+    v
+MongoDB (models/User.js)
+    |
+    |  insert user document
+    |
+    v
+Auth Controller
+    |
+    |  res.json({ success: true })
+    |
+    v
+User Browser
+
+---------------------------------------------------
+
+2. LOGIN API
+
+Key idea - Login:
+> Verifies identity
+> Issues JWT
+> Backend stays stateless
+
+User Browser
+    |
+    |  POST /login  { email, password }
+    |
+    v
+Express App
+    |
+    v
+Auth Routes
+    |
+    |  login()
+    v
+Auth Controller
+    |
+    |  User.findOne(email)
+    |  bcrypt.compare(password)
+    |  jwt.sign({ userId })
+    |
+    v
+User Browser
+    |
+    |  receives JWT token
+    |  saves token (localStorage)
+
+---------------------------------------------------
+
+3. FETCH TASKS
+
+Key idea
+> Auth middleware injects identity
+> Controller trusts req.userId
+> User sees only their data
+
+User Browser
+    |
+    |  GET /tasks
+    |  Authorization: JWT
+    |
+    v
+Express App
+    |
+    v
+Task Routes (routes/task.routes.js)
+    |
+    |  auth middleware
+    v
+Auth Middleware (middleware/auth.middleware.js)
+    |
+    |  jwt.verify(token)
+    |  req.userId = decoded.userId
+    |
+    v
+Task Controller (controllers/task.controller.js)
+    |
+    |  Task.find({ userId })
+    |
+    v
+MongoDB (models/Task.js)
+    |
+    |  return matching tasks
+    |
+    v
+User Browser
+
+---------------------------------------------------
+
+4. ADD TASK
+
+Key idea
+> Frontend NEVER sends userId
+> Ownership is enforced server-side
+
+User Browser
+    |
+    |  POST /tasks
+    |  Authorization: JWT
+    |  { task }
+    |
+    v
+Express App
+    |
+    v
+Task Routes
+    |
+    |  auth middleware
+    v
+Auth Middleware
+    |
+    |  jwt.verify(token)
+    |  req.userId set
+    |
+    v
+Task Controller
+    |
+    |  new Task({ task, userId })
+    |  save()
+    |
+    v
+MongoDB
+    |
+    v
+User Browser
+
+---------------------------------------------------
